@@ -1,18 +1,477 @@
 ---
 title: ggplot2 basics
 author: Bala Kuppusamy
-date: '2019-04-21'
+date: '2019-02-10'
 slug: ggplot2-basics
 categories:
   - R
 tags:
   - R Markdown
   - plot
-cover: /images/cover.jpg
+cover: /images/ggplot2.png
+output:
+  blogdown::html_page:
+    toc: true
+    fig_width: 6
+    dev: "svg"
 ---
 
 
+<div id="TOC">
+<ul>
+<li><a href="#task-2">Task 2</a><ul>
+<li><a href="#life-expectancy-in-2007">Life expectancy in 2007</a></li>
+<li><a href="#average-life-expectancy-in-2007-by-continent">Average life expectancy in 2007 by continent</a></li>
+</ul></li>
+<li><a href="#task-3-r-and-ggplot">Task 3: R and ggplot</a><ul>
+<li><a href="#section">3.2.4</a></li>
+<li><a href="#section-1">3.3.1</a></li>
+<li><a href="#section-2">3.5.1</a></li>
+<li><a href="#section-3">3.6.1</a></li>
+<li><a href="#section-4">3.8.1</a></li>
+</ul></li>
+</ul>
+</div>
 
-<p>Cut out summary from your post content here.</p>
-<!--more-->
-<p>The remaining content of your post.</p>
+<div id="task-2" class="section level1">
+<h1>Task 2</h1>
+<div id="life-expectancy-in-2007" class="section level2">
+<h2>Life expectancy in 2007</h2>
+<pre class="r"><code># Notice the warning=FALSE and message=FALSE in the chunk options. R spits out 
+# a lot of messages when you load tidyverse and we don&#39;t want those in the 
+# final document.
+
+library(tidyverse)  # This loads ggplot2, dplyr, and other packages you&#39;ll need
+library(gapminder)  # This loads the gapminder data
+library(tidyr)
+library(knitr)</code></pre>
+<p>Let’s first look at the first few rows of data:</p>
+<pre class="r"><code>head(gapminder)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   country     continent  year lifeExp      pop gdpPercap
+##   &lt;fct&gt;       &lt;fct&gt;     &lt;int&gt;   &lt;dbl&gt;    &lt;int&gt;     &lt;dbl&gt;
+## 1 Afghanistan Asia       1952    28.8  8425333      779.
+## 2 Afghanistan Asia       1957    30.3  9240934      821.
+## 3 Afghanistan Asia       1962    32.0 10267083      853.
+## 4 Afghanistan Asia       1967    34.0 11537966      836.
+## 5 Afghanistan Asia       1972    36.1 13079460      740.
+## 6 Afghanistan Asia       1977    38.4 14880372      786.</code></pre>
+<p>Right now, the <code>gapminder</code> data frame contains rows for all years for all countries. We want to only look at 2007, so we create a new data frame that filters only rows for 2007.</p>
+<p>Note how there’s a weird sequence of characters: <code>%&gt;%</code>. This is called a <em>pipe</em> and lets you chain functions together. We could have also written this as <code>gapminder_2007 &lt;- filter(gapminder, year == 2007)</code>.</p>
+<pre class="r"><code>gapminder_2007 &lt;- gapminder %&gt;%
+  filter(year == 2007)
+
+head(gapminder_2007)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   country     continent  year lifeExp      pop gdpPercap
+##   &lt;fct&gt;       &lt;fct&gt;     &lt;int&gt;   &lt;dbl&gt;    &lt;int&gt;     &lt;dbl&gt;
+## 1 Afghanistan Asia       2007    43.8 31889923      975.
+## 2 Albania     Europe     2007    76.4  3600523     5937.
+## 3 Algeria     Africa     2007    72.3 33333216     6223.
+## 4 Angola      Africa     2007    42.7 12420476     4797.
+## 5 Argentina   Americas   2007    75.3 40301927    12779.
+## 6 Australia   Oceania    2007    81.2 20434176    34435.</code></pre>
+<p>Now we can plot a histogram of 2007 life expectancies with the default settings:</p>
+<pre class="r"><code>ggplot(data = gapminder_2007, 
+       mapping = aes(x = lifeExp)) +
+  geom_histogram()</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-2007-1-1.svg" width="576" /></p>
+<p>R will use 30 histogram bins by default, but that’s not always appropriate, and it will yell at you for doing so. <strong>Adjust the number of bins to 2, then 40, then 100.</strong> <strong>What’s a good number for this data? Why?</strong></p>
+<p>I think a bin width of <strong>10</strong> is more appropriate as per <em>Rice’s Rule</em> - Rice’s rule is defined as: <code>(cube root of the number of observations) * 2</code></p>
+<p>Reference : <a href="https://www.statisticshowto.datasciencecentral.com/choose-bin-sizes-statistics/" class="uri">https://www.statisticshowto.datasciencecentral.com/choose-bin-sizes-statistics/</a></p>
+<pre class="r"><code>ggplot(data = gapminder_2007, 
+       mapping = aes(x = lifeExp)) +
+  geom_histogram(bins = 10)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-2007-2-1.svg" width="576" /></p>
+</div>
+<div id="average-life-expectancy-in-2007-by-continent" class="section level2">
+<h2>Average life expectancy in 2007 by continent</h2>
+<p>We’re also interested in the differences of life expectancy across continents. First, we can group all rows by continent and calculate the mean</p>
+<p>This is where the <code>%&gt;%</code> function is actually super useful. Remember that it lets you chain functions together—this means we can read these commands as a set of instructions: take the <code>gapminder</code> data frame, filter it, group it by continent, and summarize each group by calculating the mean. Without using the <code>%&gt;%</code>, we could write this same chain like this: <code>summarize(group_by(filter(gapminder, year == 2007), continent), avg_life_exp = mean(lifeExp))</code>. But that’s <em>awful</em> and impossible to read and full of parentheses that can easily be mismatched.</p>
+<pre class="r"><code>gapminder_cont_2007 &lt;- gapminder %&gt;%
+  filter(year == 2007) %&gt;% 
+  group_by(continent) %&gt;%
+  summarize(avg_life_exp = mean(lifeExp))
+
+head(gapminder_cont_2007)</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   continent avg_life_exp
+##   &lt;fct&gt;            &lt;dbl&gt;
+## 1 Africa            54.8
+## 2 Americas          73.6
+## 3 Asia              70.7
+## 4 Europe            77.6
+## 5 Oceania           80.7</code></pre>
+<p>Let’s plot these averages as a bar chart:</p>
+<pre class="r"><code>ggplot(data = gapminder_cont_2007, 
+       mapping = aes(x = continent, y = avg_life_exp, fill = continent)) + 
+  geom_col()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-2007-bar-1.svg" width="576" /></p>
+<p>Then, let’s plot them as density distributions. We don’t need to use the summarized data frame for this, just the original filtered <code>gapminder_2007</code> data frame:</p>
+<pre class="r"><code>ggplot(data = gapminder_2007, 
+       mapping = aes(x = lifeExp, fill = continent)) + 
+  geom_density()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-2007-density-1.svg" width="576" /></p>
+<p>Now let’s plot life expectancies as violin charts. These are the density distributions turned sideways:</p>
+<pre class="r"><code>ggplot(data = gapminder_2007, 
+       mapping = aes(x = continent, y = lifeExp, fill = continent)) + 
+  geom_violin()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-2007-violin-1.svg" width="576" /></p>
+<p>Finally, we can add actual points of data for each country to the violin chart:</p>
+<pre class="r"><code>ggplot(data = gapminder_2007, 
+       mapping = aes(x = continent, y = lifeExp, fill = continent)) + 
+  geom_violin() +
+  geom_point()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-2007-violin-points-1.svg" width="576" /></p>
+<p>The bar chart, density plot, violin plot, and violin plot + points each show different ways of looking at a single number—the average life expectancy in each continent. <strong>Answer these questions:</strong></p>
+<ul>
+<li>Which plot is most helpful? <em>Violin plot + Scatter plot</em></li>
+<li>Which ones show variability? <em>Violin plot + Scatter plot shows the variability, the range, the distribution of the data &amp; the outliers clearly.</em></li>
+<li>What’s going on with Oceania? <em>Oceania has only 2 data points &amp; it does not have enough data points to make meaningful statistics like mean/median.</em></li>
+</ul>
+</div>
+</div>
+<div id="task-3-r-and-ggplot" class="section level1">
+<h1>Task 3: R and ggplot</h1>
+<pre class="r"><code># Technically you don&#39;t need to run this because we loaded tidyverse earlier in Task 2
+library(tidyverse)</code></pre>
+<div id="section" class="section level2">
+<h2>3.2.4</h2>
+<p><strong>1: Run <code>ggplot(data = mpg)</code>. What do you see?</strong></p>
+<pre class="r"><code>ggplot(data = mpg)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/blank-plot-1.svg" width="192" /></p>
+<p><strong>It’s just a blank plot, as only the ‘data’ is provided; aes mapping &amp; geom are not specified for the plot</strong></p>
+<p>(Notice how I used <code>fig.width</code> and <code>fig.height</code> in the chunk options. You can click on the little gear icon in the far left of the chunk to change other options.)</p>
+<p><strong>2: How many rows are in <code>mpg</code>? How many columns?</strong></p>
+<pre class="r"><code>nrow(mpg)</code></pre>
+<pre><code>## [1] 234</code></pre>
+<pre class="r"><code>ncol(mpg)</code></pre>
+<pre><code>## [1] 11</code></pre>
+<pre class="r"><code># Or
+dim(mpg)</code></pre>
+<pre><code>## [1] 234  11</code></pre>
+<pre class="r"><code># Or
+mpg</code></pre>
+<pre><code>## # A tibble: 234 x 11
+##    manufacturer model displ  year   cyl trans drv     cty   hwy fl    class
+##    &lt;chr&gt;        &lt;chr&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt;
+##  1 audi         a4      1.8  1999     4 auto~ f        18    29 p     comp~
+##  2 audi         a4      1.8  1999     4 manu~ f        21    29 p     comp~
+##  3 audi         a4      2    2008     4 manu~ f        20    31 p     comp~
+##  4 audi         a4      2    2008     4 auto~ f        21    30 p     comp~
+##  5 audi         a4      2.8  1999     6 auto~ f        16    26 p     comp~
+##  6 audi         a4      2.8  1999     6 manu~ f        18    26 p     comp~
+##  7 audi         a4      3.1  2008     6 auto~ f        18    27 p     comp~
+##  8 audi         a4 q~   1.8  1999     4 manu~ 4        18    26 p     comp~
+##  9 audi         a4 q~   1.8  1999     4 auto~ 4        16    25 p     comp~
+## 10 audi         a4 q~   2    2008     4 manu~ 4        20    28 p     comp~
+## # ... with 224 more rows</code></pre>
+<pre class="r"><code>glimpse(mpg)</code></pre>
+<pre><code>## Observations: 234
+## Variables: 11
+## $ manufacturer &lt;chr&gt; &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;...
+## $ model        &lt;chr&gt; &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4 qua...
+## $ displ        &lt;dbl&gt; 1.8, 1.8, 2.0, 2.0, 2.8, 2.8, 3.1, 1.8, 1.8, 2.0,...
+## $ year         &lt;int&gt; 1999, 1999, 2008, 2008, 1999, 1999, 2008, 1999, 1...
+## $ cyl          &lt;int&gt; 4, 4, 4, 4, 6, 6, 6, 4, 4, 4, 4, 6, 6, 6, 6, 6, 6...
+## $ trans        &lt;chr&gt; &quot;auto(l5)&quot;, &quot;manual(m5)&quot;, &quot;manual(m6)&quot;, &quot;auto(av)...
+## $ drv          &lt;chr&gt; &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;4&quot;, &quot;4&quot;, &quot;4&quot;,...
+## $ cty          &lt;int&gt; 18, 21, 20, 21, 16, 18, 18, 18, 16, 20, 19, 15, 1...
+## $ hwy          &lt;int&gt; 29, 29, 31, 30, 26, 26, 27, 26, 25, 28, 27, 25, 2...
+## $ fl           &lt;chr&gt; &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;,...
+## $ class        &lt;chr&gt; &quot;compact&quot;, &quot;compact&quot;, &quot;compact&quot;, &quot;compact&quot;, &quot;comp...</code></pre>
+<pre class="r"><code>str(mpg)</code></pre>
+<pre><code>## Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:    234 obs. of  11 variables:
+##  $ manufacturer: chr  &quot;audi&quot; &quot;audi&quot; &quot;audi&quot; &quot;audi&quot; ...
+##  $ model       : chr  &quot;a4&quot; &quot;a4&quot; &quot;a4&quot; &quot;a4&quot; ...
+##  $ displ       : num  1.8 1.8 2 2 2.8 2.8 3.1 1.8 1.8 2 ...
+##  $ year        : int  1999 1999 2008 2008 1999 1999 2008 1999 1999 2008 ...
+##  $ cyl         : int  4 4 4 4 6 6 6 4 4 4 ...
+##  $ trans       : chr  &quot;auto(l5)&quot; &quot;manual(m5)&quot; &quot;manual(m6)&quot; &quot;auto(av)&quot; ...
+##  $ drv         : chr  &quot;f&quot; &quot;f&quot; &quot;f&quot; &quot;f&quot; ...
+##  $ cty         : int  18 21 20 21 16 18 18 18 16 20 ...
+##  $ hwy         : int  29 29 31 30 26 26 27 26 25 28 ...
+##  $ fl          : chr  &quot;p&quot; &quot;p&quot; &quot;p&quot; &quot;p&quot; ...
+##  $ class       : chr  &quot;compact&quot; &quot;compact&quot; &quot;compact&quot; &quot;compact&quot; ...</code></pre>
+<p><em>No. of Rows - 234; No. of Cols - 11</em></p>
+<p><strong>3: What does the <code>drv</code> variable describe? Read the help for <code>?mpg</code> to find out.</strong></p>
+<p><em>drv indicates the drive-type of the vehicle; Possible values = f - front-wheel drive, r - rear-wheel drive, 4 - all-wheel drive</em></p>
+<p><strong>4: Make a scatterplot of <code>hwy</code> vs <code>cyl</code>.</strong></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = cyl, y = hwy))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/hwy-cyl-scatterplot-1.svg" width="576" /></p>
+<p><strong>5: What happens if you make a scatterplot of <code>class</code> vs <code>drv</code>? Why is the plot not useful?</strong></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = class, y = drv))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/class-drv-scatterplot-1.svg" width="576" /></p>
+<p><em>The scatterplot does not clearly show all the individual data points, as a lot of them overlap one another. A better visualization would be to use ‘jitter’ option in the scatter plot</em></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = class, y = drv), position = &#39;jitter&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/unnamed-chunk-1-1.svg" width="576" /></p>
+<p><em>or use a different kind of visualization, a bar chart, as indicated below, to better represent the distribution.</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = class)) +
+  geom_bar(mapping = aes(fill = drv))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/mpg-drv-bar-1.svg" width="576" /></p>
+<p><em>or summarize the data &amp; map the frequency to ‘size’ aesthetic on the scatterplot to highlight the distribution.</em></p>
+<pre class="r"><code>by_class_drv &lt;- mpg %&gt;%
+  group_by(class, drv) %&gt;%
+  summarise(count = n())
+
+ggplot(data = by_class_drv, mapping = aes(x = class, y = drv)) +
+  geom_point(mapping = aes(size = count), alpha = 0.5, color = &#39;purple&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/unnamed-chunk-2-1.svg" width="576" /></p>
+</div>
+<div id="section-1" class="section level2">
+<h2>3.3.1</h2>
+<p><strong>1. What’s gone wrong with this code? Why are the points not blue?</strong></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = &quot;blue&quot;))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/color-aes-constant-1.svg" width="576" /></p>
+<p><code>color</code> <em>aesthetic is mapped to a constant value ‘blue’ for every observation, so there is really no differentiation among the observations &amp; all of them are grouped under a single category &amp; ggplot selects a default color, orange, for this category. Changing the chart plot color attribute should be done as indicated below instead, &amp; not as part of aesthetic mapping.</em></p>
+<pre class="r"><code>ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy), color = &#39;blue&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/color-geom-attrib-1.svg" width="576" /></p>
+<p><strong>2.Which variables in mpg are categorical? Which variables are continuous? (Hint: type ?mpg to read the documentation for the dataset). How can you see this information when you run mpg?</strong></p>
+<pre class="r"><code>head(mpg)</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   manufacturer model displ  year   cyl trans  drv     cty   hwy fl    class
+##   &lt;chr&gt;        &lt;chr&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt;  &lt;chr&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 audi         a4      1.8  1999     4 auto(~ f        18    29 p     comp~
+## 2 audi         a4      1.8  1999     4 manua~ f        21    29 p     comp~
+## 3 audi         a4      2    2008     4 manua~ f        20    31 p     comp~
+## 4 audi         a4      2    2008     4 auto(~ f        21    30 p     comp~
+## 5 audi         a4      2.8  1999     6 auto(~ f        16    26 p     comp~
+## 6 audi         a4      2.8  1999     6 manua~ f        18    26 p     comp~</code></pre>
+<pre class="r"><code>glimpse(mpg)</code></pre>
+<pre><code>## Observations: 234
+## Variables: 11
+## $ manufacturer &lt;chr&gt; &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;audi&quot;, &quot;...
+## $ model        &lt;chr&gt; &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4&quot;, &quot;a4 qua...
+## $ displ        &lt;dbl&gt; 1.8, 1.8, 2.0, 2.0, 2.8, 2.8, 3.1, 1.8, 1.8, 2.0,...
+## $ year         &lt;int&gt; 1999, 1999, 2008, 2008, 1999, 1999, 2008, 1999, 1...
+## $ cyl          &lt;int&gt; 4, 4, 4, 4, 6, 6, 6, 4, 4, 4, 4, 6, 6, 6, 6, 6, 6...
+## $ trans        &lt;chr&gt; &quot;auto(l5)&quot;, &quot;manual(m5)&quot;, &quot;manual(m6)&quot;, &quot;auto(av)...
+## $ drv          &lt;chr&gt; &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;f&quot;, &quot;4&quot;, &quot;4&quot;, &quot;4&quot;,...
+## $ cty          &lt;int&gt; 18, 21, 20, 21, 16, 18, 18, 18, 16, 20, 19, 15, 1...
+## $ hwy          &lt;int&gt; 29, 29, 31, 30, 26, 26, 27, 26, 25, 28, 27, 25, 2...
+## $ fl           &lt;chr&gt; &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;, &quot;p&quot;,...
+## $ class        &lt;chr&gt; &quot;compact&quot;, &quot;compact&quot;, &quot;compact&quot;, &quot;compact&quot;, &quot;comp...</code></pre>
+<p><em>As per the details above, the variables indicated as character datatype (chr) are categorical, &amp; the ones marked as integers/numbers (int/num/dbl) are continuous. This datatype information is printed under the column headings for each column.</em></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Categorical</th>
+<th align="left">Continuous</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">manufacturer</td>
+<td align="left">displ</td>
+</tr>
+<tr class="even">
+<td align="left">model</td>
+<td align="left">year</td>
+</tr>
+<tr class="odd">
+<td align="left">trans</td>
+<td align="left">cyl</td>
+</tr>
+<tr class="even">
+<td align="left">drv</td>
+<td align="left">city</td>
+</tr>
+<tr class="odd">
+<td align="left">fl</td>
+<td align="left">hwy</td>
+</tr>
+<tr class="even">
+<td align="left">class</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<p><strong>3. Map a continuous variable to color, size, and shape. How do these aesthetics behave differently for categorical vs. continuous variables?</strong></p>
+<p><em>Here is an example where a categorical variable is marked for color, size &amp; shape aesthetics.</em></p>
+<pre class="r"><code>ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = drv, size = drv, shape = drv))</code></pre>
+<pre><code>## Warning: Using size for a discrete variable is not advised.</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/discr-variables-color-1.svg" width="576" /></p>
+<ul>
+<li>Categorical variables are best suited to be mapped to <code>color</code> &amp; <code>shape</code>.</li>
+<li>Categorical variables should not be mapped to <code>size</code>; it will generate a warning.</li>
+<li>Continuous variables cannot be used for mapping to <code>shape</code>; it will generate an error.</li>
+<li>Continuous variables are best suited for mapping to <code>size</code> (&amp; <code>color</code> in some cases).</li>
+<li>If a continuous variable is mapped to <code>color</code>, ggplot will map it on a gradient scale and provide gradient range in the legend.</li>
+</ul>
+<p><em>Below is an example where continuous variable is mapped to color &amp; size aesthetics.</em></p>
+<pre class="r"><code>ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = cty, size = cty))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/cont-variable-color-1.svg" width="576" /></p>
+<p><strong>4. What happens if you map the same variable to multiple aesthetics?</strong></p>
+<p><em>While it may not add any value/additional information, it’s perfectly valid to have same variable mapped to multiple aesthetics in a plot. In the below example, the same variables (drv &amp; cty) are mapped to multiple aesthetics color &amp; size.</em></p>
+<pre class="r"><code>ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = cty, size = cty))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/cont-variable-color-2-1.svg" width="576" /></p>
+<p><strong>5. What does the stroke aesthetic do? What shapes does it work with? (Hint: use ?geom_point)</strong></p>
+<p><code>stroke</code> <em>aesthetic controls the thickness of the outer lines for the filled shapes (shape #21 - #24). Below is an example.</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy, size = cty, stroke = cty / 5)) +
+  geom_point(shape = 21, fill = &#39;red&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/stroke-1.svg" width="576" /></p>
+<p><strong>6. What happens if you map an aesthetic to something other than a variable name, like aes(colour = displ &lt; 5)? Note, you’ll also need to specify x and y.</strong></p>
+<p><em>If any of the aesthetic is indicated as a calculation rather than a variable, the calculated result is used for the aesthetic value; in case of conditional checks, the resulting TRUE/FALSE boolean value is mapped to the aesthetic, as in the below example.</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = cty, y = hwy, color = displ &lt; 5)) +
+  geom_point()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/aes-calc-1.svg" width="576" /></p>
+</div>
+<div id="section-2" class="section level2">
+<h2>3.5.1</h2>
+<p><strong>1. What happens if you facet on a continuous variable?</strong></p>
+<p><em>If we facet on a continuous variable, the number of facets will be too many &amp; the resulting visualization may not make much sense.</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_point() +
+  facet_wrap(~ displ)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/facet-continuous-1.svg" width="576" /></p>
+<p><strong>2. What do the empty cells in plot with facet_grid(drv ~ cyl) mean? How do they relate to this plot?</strong></p>
+<p><em>The empty cells in the facet_grid(drv ~ cyl) indicate that there are no matching data points for those x-axis/y-axis combinations, &amp; the same information has been highlighted in the below plot, where there are no data points at these positions (4,5), (r, 4), (r, 5)</em></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = drv, y = cyl))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/facet-grid-empty-1.svg" width="576" /></p>
+<p><strong>3. What plots does the following code make? What does . do?</strong></p>
+<p><em>This code facets the plots in a grid format - but instead of using a 2 dimensional grid, it is faceting by only 1 variable - ‘drv’, on horizontal dimension; there are no variable specified for the vertical dimension of the grid.</em></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(drv ~ .)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/facet-dot-1.svg" width="576" /></p>
+<p><em>This code facets the plots in a grid - faceting by only 1 variable - ‘cyl’ on the vertical dimension. The ‘.’ in the facet_grid formula indicates that the corresponding dimension has been left empty, &amp; faceting is done only on 1 variable/dimension.</em></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(. ~ cyl)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/facet-dot-2-1.svg" width="576" /></p>
+<p><strong>4. Take the first faceted plot in this section:</strong></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_wrap(~ class, nrow = 2)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/facet-adv-disadv-1.svg" width="576" /></p>
+<pre class="r"><code>ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = class))</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/facet-adv-disadv-2.svg" width="576" /></p>
+<p><strong>What are the advantages to using faceting instead of the colour aesthetic? What are the disadvantages? How might the balance change if you had a larger dataset?</strong></p>
+<p><em>Faceting breaksup the plot into multiple sub-plots based on the categorical variable, &amp; this makes it easier to read the plots &amp; clearly understand the distribution of the variables being plotted. Advantages of faceting: makes it easy to visualize the difference &amp; similarities in the data distribution &amp; patterns. Disadvantages of faceting: if the number of values in the categorical variable is high, then faceting may produce huge number of sub-plots, thereby reducing the readability of the plot. Faceting works if the number of values of the categorical variable being faceted on are less, &amp; the dataset is large. For a larger dataset, it might be difficult to visualize the distributions using color easthetic alone; so facetting adds value in larger datasets.</em></p>
+</div>
+<div id="section-3" class="section level2">
+<h2>3.6.1</h2>
+<p><strong>1. What geom would you use to draw a line chart? A boxplot? A histogram? An area chart?</strong></p>
+<ol style="list-style-type: decimal">
+<li>Line chart - geom_line or geom_smooth</li>
+</ol>
+<pre class="r"><code>ggplot(data = by_class_drv, mapping = aes(x = class, y = count, color = drv, group = drv)) + 
+  geom_line()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/geoms-list-2-1.svg" width="576" /></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = drv)) + 
+  geom_smooth(se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/geoms-list-1.svg" width="576" /></p>
+<ol start="2" style="list-style-type: decimal">
+<li>Boxplot - geom_boxplot</li>
+</ol>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = drv)) + 
+  geom_boxplot()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/geoms-list-3-1.svg" width="576" /></p>
+<ol start="3" style="list-style-type: decimal">
+<li>Histogram - geom_histogram</li>
+</ol>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ)) + 
+  geom_histogram(bins = 10)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/geoms-list-4-1.svg" width="576" /></p>
+<ol start="4" style="list-style-type: decimal">
+<li>Area - geom_area</li>
+</ol>
+<pre class="r"><code>by_displ &lt;- mpg %&gt;%
+  group_by(displ) %&gt;%
+  summarise(hwy_mn = mean(hwy))
+
+ggplot(data = by_displ, mapping = aes(x = displ, y = hwy_mn)) + 
+  geom_area(stat = &#39;identity&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/geoms-list-5-1.svg" width="576" /></p>
+<pre class="r"><code>by_displ_drv &lt;- mpg %&gt;%
+  group_by(displ, drv) %&gt;%
+  summarise(hwy_mn = mean(hwy))
+
+ggplot(data = by_displ_drv, mapping = aes(x = displ, y = hwy_mn, fill = drv)) +
+  geom_area(stat = &#39;identity&#39;, position = &#39;stack&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/geoms-list-5-2.svg" width="576" /></p>
+<p><strong>2. Run this code in your head and predict what the output will look like. Then, run the code in R and check your predictions.</strong></p>
+<p><em>I predicted it to have a scatterplot &amp; smoothing line chart overlapped, with the data grouped by ‘drv’ variable for color aesthetic for both the points &amp; the line. The ‘se=FALSE’ indicates that the confidence interval around the smoothing line will not be displayed.</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = drv)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/geom-predict-1.svg" width="576" /></p>
+<p><strong>3. What does show.legend = FALSE do? What happens if you remove it? Why do you think I used it earlier in the chapter?</strong></p>
+<p><code>show.legend</code> <em>parameter makes the legend be not displayed in the plot. It was used earlier to have the legend hidden, as the data being grouped was obvious enough that it does not warrant a legend.</em></p>
+<p><strong>4. What does the se argument to geom_smooth() do?</strong></p>
+<p><code>se</code> <em>argument indicates the flag whether the confidence interval for the smoothing line need to be displayed or not. By default this flag will be TRUE.</em></p>
+<p><strong>5. Will these two graphs look different? Why/why not?</strong></p>
+<p><em>No, the two graphs are the same &amp; they will not look different. Though the way in which the plots are made is different, the data, aesthetic mapping, &amp; geoms are exactly same for both the plots.</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth()</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/mapping-inherit-1.svg" width="576" /></p>
+<pre class="r"><code>ggplot() + 
+  geom_point(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_smooth(data = mpg, mapping = aes(x = displ, y = hwy))</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/mapping-inherit-2.svg" width="576" /></p>
+<p><strong>6. Recreate the R code necessary to generate the following graphs.</strong></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(size = 3) + 
+  geom_smooth(size = 2, se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-recreate-1-1.svg" width="480" /></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(size = 3) + 
+  geom_smooth(mapping = aes(group = drv), size = 2, se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-recreate-1-2.svg" width="480" /></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = drv)) + 
+  geom_point(size = 3) + 
+  geom_smooth(size = 2, se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-recreate-1-3.svg" width="480" /></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = drv), size = 3) + 
+  geom_smooth(size = 2, se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-recreate-1-4.svg" width="480" /></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = drv), size = 3) + 
+  geom_smooth(mapping = aes(linetype = drv), size = 2, se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-recreate-1-5.svg" width="480" /></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(fill = drv), size = 3, shape = 21, stroke = 2, color = &#39;white&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/plot-recreate-1-6.svg" width="480" /></p>
+</div>
+<div id="section-4" class="section level2">
+<h2>3.8.1</h2>
+<p><strong>1. What is the problem with this plot? How could you improve it?</strong></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/unnamed-chunk-3-1.svg" width="576" /></p>
+<p><em>The chart above does not display all the data points clearly, as many datapoints overlap. Add position=‘jitter’ to make the data points display distinctly.</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point(position = &#39;jitter&#39;)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/unnamed-chunk-4-1.svg" width="576" /></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_jitter()</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/unnamed-chunk-4-2.svg" width="576" /></p>
+<p><strong>2. What parameters to geom_jitter() control the amount of jittering?</strong></p>
+<p><code>height</code> and <code>width</code> <em>parameters control the amount of jittering. Default is 0.4</em></p>
+<pre class="r"><code>ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_jitter(height = 0.2, width = 0.2)</code></pre>
+<p><img src="/post/2019-04-21-ggplot2-basics_files/figure-html/unnamed-chunk-5-1.svg" width="576" /></p>
+</div>
+</div>
