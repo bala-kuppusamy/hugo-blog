@@ -22,11 +22,11 @@ copyright = "© This post is licensed under a Creative Commons Attribution-NonCo
   identifier = "home"
   url = "/"
 
-[[menu.main]]
-  name = "Works"
-  weight = 20
-  identifier = "works"
-  url = "/post/first-awesome-post/"
+# [[menu.main]]
+#   name = "Works"
+#   weight = 20
+#   identifier = "works"
+#   url = "/post/first-awesome-post/"
 
 [[menu.main]]
   name = "Tags"
@@ -38,8 +38,8 @@ copyright = "© This post is licensed under a Creative Commons Attribution-NonCo
 [params]
   author = "Bala Kuppusamy"
   bg = "images/grey-prism.svg"
-  avatar = "images/avatar.png"
-  seotitle = "Hugo Blog"
+  avatar = "images/undraw_christmas_tree_56sw.svg"
+  seotitle = "Visual Analytics Blog"
   subtitle = "~ Keep It Simple Stupid ~"
   description = "Hugo is one of the most popular open-source static site generators. With its amazing speed and flexibility, Hugo makes building websites fun again."
   paginate = 10
