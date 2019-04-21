@@ -30,7 +30,7 @@ library(tidyverse)
 library(scales)
 library(ggspatial) # make sure to install if you don't have it
 
-data_folder <- '../../data'
+data_folder <- './data'
 csv_file <- paste0(data_folder, '/Officer_Traffic_Stops.csv')
 shp_file <- paste0(data_folder, '/CMPD_Police_Divisions/CMPD_Police_Divisions.shp')
 
