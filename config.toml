@@ -1,33 +1,30 @@
-baseURL = ""
+baseURL = "https://data-science-5122-blog.netlify.com"
 languageCode = "en"
 title = "Visual Analytics Blog"
 theme = "hugo-nuo"
 enableRobotsTXT = true
 PygmentsCodeFences = true
 canonifyurls = true
-
-# Disqus Username
+enableEmoji = true
 disqusShortname = "data-science-5122-blog"
+# googleAnalytics = "UA-XXXXXXXX-X"
+ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown", "_files$", "_cache$"]
 
-# Google Analytics UA number
-googleAnalytics = "UA-XXXXXXXX-X"
+[permalinks]
+    post = "/:year/:month/:day/:slug/"
 
-# Copyright of your post
 copyright = "© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce."
 
-# Initial site menu, you can extend menu with content.
 [[menu.main]]
   name = "Home"
   weight = 10
   identifier = "home"
   url = "/"
-
 # [[menu.main]]
 #   name = "Works"
 #   weight = 20
 #   identifier = "works"
 #   url = "/post/first-awesome-post/"
-
 [[menu.main]]
   name = "Tags"
   weight = 30
@@ -38,10 +35,9 @@ copyright = "© This post is licensed under a Creative Commons Attribution-NonCo
 [params]
   author = "Bala Kuppusamy"
   bg = "images/grey-prism.svg"
-# avatar = "images/undraw_christmas_tree_56sw.svg"
   avatar = "images/avatar.png"
   seotitle = "Visual Analytics Blog"
-  subtitle = "~ Keep It Simple Stupid ~"
+  subtitle = "~ Static & Dynamic plots ~"
   description = "Hugo is one of the most popular open-source static site generators. With its amazing speed and flexibility, Hugo makes building websites fun again."
   paginate = 10
 
@@ -50,9 +46,9 @@ copyright = "© This post is licensed under a Creative Commons Attribution-NonCo
   github = "bala-kuppusamy/hugo-blog"
   twitter = "twitter_username"
   linkedin = "linkedin_username"
+  youtube = "youtube_username"
   # facebook = "facebook_username"
   # google = "googlplus_id_number"
-  youtube = "youtube_username"
   # medium = "medium_username"
   # jsfiddle = "jsfiddle_username"
   # codepen = "codepen_username"
@@ -64,17 +60,17 @@ copyright = "© This post is licensed under a Creative Commons Attribution-NonCo
   # customStyle = "styles/custom.scss"
 
   # Changyan Comments (China Only)
-  changyan = false
-  changyanId = "cyt3toRiB"
-  changyanConf = "prod_0908b1cb9a581501753cce1ed074dbe3"
+  # changyan = false
+  # changyanId = "cyt3toRiB"
+  # changyanConf = "prod_0908b1cb9a581501753cce1ed074dbe3"
 
   # Google Webmaster
   # https://www.google.com/webmasters/
-  googleSiteVerification = "_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc"
+  # googleSiteVerification = "_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc"
 
   # Bing Webmaster
   # https://www.bing.com/toolbox/webmaster/
-  msValidate = "22596E34341DD1D17D6022C44647E587"
+  # msValidate = "22596E34341DD1D17D6022C44647E587"
 
   # Baidu Webmaster (China Only)
   # https://zhanzhang.baidu.com/

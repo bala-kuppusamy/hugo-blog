@@ -2,6 +2,7 @@
 title: ggplot2 basics
 author: Bala Kuppusamy
 date: '2019-02-10'
+weight: 10
 slug: ggplot2-basics
 categories:
   - R

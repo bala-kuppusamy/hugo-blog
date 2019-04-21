@@ -2,6 +2,7 @@
 title: ggplot2 advanced
 author: Bala Kuppusamy
 date: '2019-02-23'
+weight: 10
 slug: ggplot2-advanced
 categories:
   - R
@@ -29,7 +30,16 @@ library(tidyverse)
 library(scales)
 library(ggspatial) # make sure to install if you don't have it
 
-df <- read_csv("./data/Officer_Traffic_Stops.csv")
+data_folder <- '../../data'
+csv_file <- paste0(data_folder, '/Officer_Traffic_Stops.csv')
+shp_file <- paste0(data_folder, '/CMPD_Police_Divisions/CMPD_Police_Divisions.shp')
+
+```
+
+``` {r load-csv-file}
+
+df <- read_csv(csv_file)
+
 ```
 
 ## Demographics of drivers (1 point)
@@ -234,7 +244,7 @@ To do this, we need to use the `sf` package. (For help along the way, see [this 
 library(sf)
 library(viridis)
 
-cmpd <- st_read("./data/CMPD_Police_Divisions/CMPD_Police_Divisions.shp")
+cmpd <- st_read(shp_file)
 ```
 
 Note that while we have five files, we only load in the shapefile (`.shp`) file. This is typical but know that to use this file you would need the other four files in the same folder as your shapefile.
