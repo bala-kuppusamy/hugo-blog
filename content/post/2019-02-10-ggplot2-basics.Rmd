@@ -19,7 +19,7 @@ output:
 
 # Task 2
 
-## Life expectancy in 2007
+## Life expectancy in 2008
 
 ```{r load-packages, warning=FALSE, message=FALSE}
 # Notice the warning=FALSE and message=FALSE in the chunk options. R spits out 
